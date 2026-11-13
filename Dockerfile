@@ -13,7 +13,6 @@ LABEL org.opencontainers.image.title="brave-org" \
       io.github.mspdaniel.brave-org.brave-version="${BRAVE_VERSION}"
 
 ENV TITLE="XOM" \
-    SELKIES_UI_TITLE="XOM" \
     PIXELFLUX_WAYLAND="false" \
     NO_DECOR="true" \
     LC_ALL="C.UTF-8" \

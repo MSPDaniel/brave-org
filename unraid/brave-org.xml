@@ -8,7 +8,7 @@
   <Privileged>false</Privileged>
   <Support>https://github.com/MSPDaniel/brave-org</Support>
   <Project>https://github.com/MSPDaniel/brave-org</Project>
-  <Overview>Brave Origin on LinuxServer Selkies, with multilingual keyboard and persistent browser profile. Remote access tab title XOM.</Overview>
+  <Overview>Brave Origin on LinuxServer Selkies, with multilingual keyboard and persistent browser profile. Remote access tab title configurable with TITLE.</Overview>
   <Category>Network:Web</Category>
   <WebUI>https://[IP]:[PORT:3001]/</WebUI>
   <Icon>https://icons.iconarchive.com/icons/simpleicons-team/simple/256/brave-icon.png</Icon>
@@ -21,6 +21,5 @@
   <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="Unraid group GID" Type="Variable" Display="advanced" Required="true" Mask="false">100</Config>
   <Config Name="Timezone" Target="TZ" Default="America/Chicago" Mode="" Description="Timezone" Type="Variable" Display="advanced" Required="false" Mask="false">America/Chicago</Config>
   <Config Name="Tab title" Target="TITLE" Default="XOM" Mode="" Description="Web browser tab title" Type="Variable" Display="advanced" Required="false" Mask="false">XOM</Config>
-  <Config Name="Selkies UI title" Target="SELKIES_UI_TITLE" Default="XOM" Mode="" Description="Selkies tab and sidebar title" Type="Variable" Display="advanced" Required="false" Mask="false">XOM</Config>
   <Config Name="Wayland" Target="PIXELFLUX_WAYLAND" Default="false" Mode="" Description="X11 desktop as in Meru" Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
 </Container>

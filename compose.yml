@@ -15,7 +15,6 @@ services:
       TITLE: XOM
       CUSTOM_USER: "${BRAVE_ORG_USER:-brave}"
       PASSWORD: "${BRAVE_ORG_PASSWORD:?Set BRAVE_ORG_PASSWORD in your .env file}"
-      SELKIES_UI_TITLE: XOM
       PIXELFLUX_WAYLAND: "false" # Same X11 Selkies path as working Meru
       LANG: C.UTF-8
       LC_ALL: C.UTF-8

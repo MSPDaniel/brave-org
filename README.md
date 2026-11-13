@@ -10,13 +10,13 @@ Self-hosted **Brave Origin** browser on LinuxServer's Selkies desktop stack, bas
 - Unraid persistent data: `/mnt/user/appdata/brave-org` mounted at `/config`
 - Brave user profile: `/mnt/user/appdata/brave-org/brave-org-profile`
 - HTTPS access: `https://UNRAID-IP:3012` (or configure an HTTPS reverse proxy)
-- Browser tab / Selkies header: **XOM** (`TITLE=XOM`, `SELKIES_UI_TITLE=XOM`)
+- Browser tab / Selkies header: **XOM** by default (`TITLE` runtime environment variable)
 - Tab favicon / PWA app icon: **black Brave lion on white** (Simple Icons Brave glyph; converted to PNG at build time)
 - Unraid template icon: monochrome Brave icon from IconArchive's Simple Icons collection
 - Default desktop: X11 mode, matching the Meru configuration (`PIXELFLUX_WAYLAND=false`)
 - Built-in web authentication via `CUSTOM_USER` and `PASSWORD` at the LinuxServer Nginx gateway
 
-**Tab name distinction:** `XOM` is the title of the local Edge tab *hosting the Selkies remote session*. The Brave windows and tabs *inside* the streamed desktop retain their normal titles.
+**Tab name distinction:** `TITLE` sets the title of the local Edge tab *hosting the Selkies remote session*. The Brave windows and tabs *inside* the streamed desktop retain their normal titles.
 
 ## Daily checks without unnecessary builds
 
@@ -76,3 +76,9 @@ The app icon uses the Brave glyph from Simple Icons (CC0) rendered in black on w
 - https://docs.linuxserver.io/selkies/user-guide/configuration/
 - https://brave.com/origin/linux/
 - https://simpleicons.org/?q=brave
+
+## Changing the external browser tab title
+
+Change the **Tab title** environment variable (`TITLE`) in Unraid's brave-org container template, then Apply to recreate the container. There is deliberately **no** baked-in `SELKIES_UI_TITLE`: that variable can override `TITLE` in the browser tab. If migrating an existing Unraid template, **remove** its legacy `SELKIES_UI_TITLE=XOM` variable entirely.
+
+Verify using `docker inspect brave-org --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^(TITLE|SELKIES_UI_TITLE)='` and open the external web session in an InPrivate window if the title remains cached. This does not change titles of pages inside the remote Brave browser.
