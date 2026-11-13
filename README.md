@@ -82,3 +82,26 @@ The app icon uses the Brave glyph from Simple Icons (CC0) rendered in black on w
 Change the **Tab title** environment variable (`TITLE`) in Unraid's brave-org container template, then Apply to recreate the container. There is deliberately **no** baked-in `SELKIES_UI_TITLE`: that variable can override `TITLE` in the browser tab. If migrating an existing Unraid template, **remove** its legacy `SELKIES_UI_TITLE=XOM` variable entirely.
 
 Verify using `docker inspect brave-org --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^(TITLE|SELKIES_UI_TITLE)='` and open the external web session in an InPrivate window if the title remains cached. This does not change titles of pages inside the remote Brave browser.
+
+## Updating an existing Unraid installation (avoiding duplicate title variables)
+
+The repository XML contains **one** `TITLE` field and **no** `SELKIES_UI_TITLE`.
+Unraid stores a **separate, existing** template at `/boot/config/plugins/dockerMan/templates-user/my-brave-org.xml`. Updating GitHub files or pulling a new image does not automatically clean up duplicate variables already saved there.
+
+In **Unraid → Docker → brave-org → Edit → Advanced View**, remove old duplicate `TITLE`/`SELKIES_UI_TITLE` fields. Keep one `TITLE` variable with the desired title and remove `SELKIES_UI_TITLE` entirely so it cannot override `TITLE`. Click Apply, then confirm:
+
+```bash
+docker inspect brave-org --format '{{range .Config.Env}}{{println .}}{{end}}' | grep -E '^(TITLE|SELKIES_UI_TITLE)='
+```
+
+The expected result is exactly one `TITLE=<your-title>` and no `SELKIES_UI_TITLE`. If the old title persists in Edge, try InPrivate after verifying the environment.
+
+For new deployments, the XML template is the canonical one. Avoid manually adding duplicate title variables when importing a newer template.
+
+Validate the repository before pushing changes:
+
+```bash
+python3 scripts/validate-project.py
+```
+
+The publish job runs this check before building the image.
