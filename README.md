@@ -14,9 +14,34 @@ Self-hosted **Brave Origin** browser on LinuxServer's Selkies desktop stack, bas
 - Tab favicon / PWA app icon: **black Brave lion on white** (Simple Icons Brave glyph; converted to PNG at build time)
 - Unraid template icon: monochrome Brave icon from IconArchive's Simple Icons collection
 - Default desktop: X11 mode, matching the Meru configuration (`PIXELFLUX_WAYLAND=false`)
+- **tint2 taskbar** at bottom of Selkies/Openbox desktop: click the Brave task button to restore a minimized browser window
 - Built-in web authentication via `CUSTOM_USER` and `PASSWORD` at the LinuxServer Nginx gateway
 
 **Tab name distinction:** `TITLE` sets the title of the local Edge tab *hosting the Selkies remote session*. The Brave windows and tabs *inside* the streamed desktop retain their normal titles.
+
+## Restore a minimized Brave window with the taskbar
+
+This image installs Debian Trixie **tint2** and starts it **once** from the existing `/usr/local/bin/start-brave-org` launcher in the same Openbox/X11 session. A 34-pixel bottom panel displays open-window buttons. **Click the Brave button** to restore a minimized window; no Docker restart or keyboard shortcuts are needed. The taskbar is *not* a second desktop or a separate Selkies service. It stays active as the Brave restart loop relaunches the browser.
+
+The panel is configured in `root/usr/local/share/brave-org/tint2rc` and installed at `/usr/local/share/brave-org/tint2rc`. To customize its size, colors or placement, edit that file in GitHub and rebuild. The panel is intentionally kept outside `/config` so an existing persistent browser profile does not prevent it from being updated.
+
+Verify in Unraid with `docker exec brave-org pgrep -af tint2`. If no taskbar appears, inspect `docker exec brave-org tail -60 /tmp/brave-org-tint2.log`. This X11-specific panel is skipped if `PIXELFLUX_WAYLAND=true`; the recommended image configuration is X11. A maximized Brave window should leave room for the bar via the X11 strut reservation; if your window manager ignores that reservation, the panel also runs in the top layer.
+
+**No changes to `/config/.config/openbox/autostart` are required.** Keep the existing line `exec /usr/local/bin/start-brave-org`. Updating the image and recreating the container starts the new launcher; the persistent profile, saved logins, authentication settings, and existing Unraid template are unchanged.
+
+## Automatic Brave recovery (without restarting Selkies)
+
+The existing Openbox autostart executes `/usr/local/bin/start-brave-org`. That launcher now monitors the primary Brave process and relaunches it **3 seconds after it exits**, while the Selkies desktop remains running. Browser flags, authentication, keyboard backend, and the persistent profile path are unchanged. The launcher handles `TERM`/`INT`/`HUP` to stop cleanly with the desktop.
+
+To test after updating the running image, once the browser is open:
+
+```bash
+docker exec brave-org sh -c 'pkill -TERM -u abc -f "^/opt/brave.com/brave-origin/brave --user-data-dir="'
+```
+
+Brave should reopen automatically in the existing desktop session. To shut down the browser *without* auto-restarting it, stop the container or its desktop service rather than killing only the browser. Note that normal browser **Quit** also triggers auto-relaunch. Avoid simultaneously using a separate Unraid User Script to start Brave.
+
+Do not change the persistent `/config/.config/openbox/autostart`: it already calls this launcher. Image updates replace `/usr/local/bin/start-brave-org` without requiring a migration of your profile. A container restart activates the updated launcher.
 
 ## Daily checks without unnecessary builds
 

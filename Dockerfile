@@ -21,7 +21,7 @@ ENV TITLE="XOM" \
 # Stable Brave Origin from the officially signed Brave APT repository.
 RUN set -eux; \
     apt-get update; \
-    apt-get install -y --no-install-recommends ca-certificates curl fonts-noto-core; \
+    apt-get install -y --no-install-recommends ca-certificates curl fonts-noto-core tint2; \
     curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg \
       https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg; \
     curl -fsSLo /etc/apt/sources.list.d/brave-browser-release.sources \

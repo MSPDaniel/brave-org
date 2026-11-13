@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -uo pipefail
 
-# /config persists across image recreations, including login databases and extensions.
+# /config persists across image recreations (profile, passwords, extensions).
 mkdir -p /config/brave-org-profile /config/downloads /tmp/brave-org-cache
 
 if command -v brave-origin >/dev/null 2>&1; then
@@ -9,14 +9,55 @@ if command -v brave-origin >/dev/null 2>&1; then
 elif [ -x /opt/brave.com/brave-origin/brave ]; then
   BROWSER=/opt/brave.com/brave-origin/brave
 else
-  echo 'ERROR: Brave Origin executable not found' >&2
+  echo '[brave-org] ERROR: Brave Origin executable not found' >&2
   exit 1
 fi
 
-exec "$BROWSER" \
-  --user-data-dir=/config/brave-org-profile \
-  --disk-cache-dir=/tmp/brave-org-cache \
-  --no-first-run \
-  --no-default-browser-check \
-  --start-maximized \
-  "$@"
+BRAVE_PID=''
+TASKBAR_PID=''
+STOPPING=0
+cleanup() {
+  STOPPING=1
+  trap - TERM INT HUP
+  if [[ -n "$TASKBAR_PID" ]]; then
+    kill -TERM "$TASKBAR_PID" 2>/dev/null || true
+    wait "$TASKBAR_PID" 2>/dev/null || true
+  fi
+  if [[ -n "$BRAVE_PID" ]]; then
+    kill -TERM "$BRAVE_PID" 2>/dev/null || true
+    wait "$BRAVE_PID" 2>/dev/null || true
+  fi
+  exit 0
+}
+trap cleanup TERM INT HUP
+
+# Start tint2 once in the same Openbox/X11 session, before launching Brave.
+# Keeping it outside the browser restart loop ensures that killing Brave does
+# not spawn multiple taskbars. If the panel fails, Brave still launches.
+if [[ "${PIXELFLUX_WAYLAND:-false}" != "true" ]] && command -v tint2 >/dev/null 2>&1; then
+  echo "[brave-org] Starting tint2 taskbar..."
+  tint2 -c /usr/local/share/brave-org/tint2rc \
+    >/tmp/brave-org-tint2.log 2>&1 &
+  TASKBAR_PID=$!
+fi
+
+# Run inside the existing Openbox session as abc, not as a second s6 service.
+# Only Openbox autostart invokes this script. Do not start another copy.
+while (( ! STOPPING )); do
+  echo "[brave-org] Starting Brave Origin..."
+  "$BROWSER" \
+    --user-data-dir=/config/brave-org-profile \
+    --disk-cache-dir=/tmp/brave-org-cache \
+    --no-first-run \
+    --no-default-browser-check \
+    --start-maximized \
+    "$@" &
+  BRAVE_PID=$!
+  wait "$BRAVE_PID"
+  STATUS=$?
+  BRAVE_PID=''
+  (( STOPPING )) && break
+  echo "[brave-org] Brave exited (status $STATUS); restarting in 3 seconds..."
+  sleep 3 &
+  wait $! || true
+done
