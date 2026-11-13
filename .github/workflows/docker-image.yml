@@ -1,0 +1,107 @@
+name: Check Upstream and Publish brave-org
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    - cron: '24 9 * * *' # Check daily; BUILD ONLY IF CHANGED.
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: brave-org-publish
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.check.outputs.changed }}
+      base_digest: ${{ steps.check.outputs.base_digest }}
+      brave_version: ${{ steps.check.outputs.brave_version }}
+      image: ${{ steps.check.outputs.image }}
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - name: Authenticate to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Check upstream release versions and existing image
+        id: check
+        shell: bash
+        run: |
+          set -euo pipefail
+          image="ghcr.io/${GITHUB_REPOSITORY,,}"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+
+          # Manifest digest changes when the moving Selkies distro base changes.
+          base_digest="$(docker buildx imagetools inspect ghcr.io/linuxserver/baseimage-selkies:debiantrixie | awk '$1 == "Digest:" {print $2; exit}')"
+          [[ "$base_digest" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo 'Unable to resolve Selkies base digest'; exit 1; }
+          echo "base_digest=$base_digest" >> "$GITHUB_OUTPUT"
+
+          # Query the current Brave *stable* APT candidate, not the webpage title.
+          sudo install -d /usr/share/keyrings /etc/apt/sources.list.d
+          sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
+          sudo curl -fsSLo /etc/apt/sources.list.d/brave-browser-release.sources https://brave-browser-apt-release.s3.brave.com/brave-browser.sources
+          sudo apt-get update -qq
+          brave_version="$(apt-cache policy brave-origin | awk '$1 == "Candidate:" {print $2; exit}')"
+          [[ -n "$brave_version" && "$brave_version" != '(none)' ]] || { echo 'Could not resolve Brave Origin version'; exit 1; }
+          echo "brave_version=$brave_version" >> "$GITHUB_OUTPUT"
+
+          old_base=''
+          old_brave=''
+          if docker pull "$image:latest"; then
+            old_base="$(docker image inspect "$image:latest" --format '{{ index .Config.Labels "org.opencontainers.image.base.digest" }}' 2>/dev/null || true)"
+            old_brave="$(docker image inspect "$image:latest" --format '{{ index .Config.Labels "io.github.mspdaniel.brave-org.brave-version" }}' 2>/dev/null || true)"
+          else
+            echo 'No existing latest image (or image not accessible). Will build.'
+          fi
+
+          echo "Selkies: upstream=$base_digest published=$old_base"
+          echo "Brave: upstream=$brave_version published=$old_brave"
+          if [[ "$GITHUB_EVENT_NAME" == 'push' || "$GITHUB_EVENT_NAME" == 'workflow_dispatch' || "$base_digest" != "$old_base" || "$brave_version" != "$old_brave" ]]; then
+            echo 'changed=true' >> "$GITHUB_OUTPUT"
+            echo 'Build required.'
+          else
+            echo 'changed=false' >> "$GITHUB_OUTPUT"
+            echo 'Upstream unchanged: skipping build and publish.'
+          fi
+
+  publish:
+    needs: check
+    if: needs.check.outputs.changed == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/metadata-action@v5
+        id: meta
+        with:
+          images: ${{ needs.check.outputs.image }}
+          tags: |
+            type=raw,value=latest
+            type=raw,value=build-${{ github.run_id }}-${{ github.run_attempt }}
+            type=sha,prefix=sha-
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          pull: true
+          no-cache: true
+          build-args: |
+            SELKIES_BASE=ghcr.io/linuxserver/baseimage-selkies@${{ needs.check.outputs.base_digest }}
+            SELKIES_BASE_DIGEST=${{ needs.check.outputs.base_digest }}
+            BRAVE_VERSION=${{ needs.check.outputs.brave_version }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
