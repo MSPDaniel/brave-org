@@ -50,7 +50,7 @@ jobs:
           sudo curl -fsSLo /usr/share/keyrings/brave-browser-archive-keyring.gpg https://brave-browser-apt-release.s3.brave.com/brave-browser-archive-keyring.gpg
           sudo curl -fsSLo /etc/apt/sources.list.d/brave-browser-release.sources https://brave-browser-apt-release.s3.brave.com/brave-browser.sources
           sudo apt-get update -qq
-          brave_version="$(apt-cache policy brave-origin | awk '$1 == "Candidate:" {print $2; exit}')"
+          brave_version="$(apt-cache policy brave-origin | awk '$1 == "Candidate:" && !found {print $2; found=1}')"
           [[ -n "$brave_version" && "$brave_version" != '(none)' ]] || { echo 'Could not resolve Brave Origin version'; exit 1; }
           echo "brave_version=$brave_version" >> "$GITHUB_OUTPUT"
 
@@ -79,6 +79,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Validate project files and Unraid template
+        run: python3 scripts/validate-project.py
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
