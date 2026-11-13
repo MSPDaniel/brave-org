@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>brave-org</Name>
+  <Repository>ghcr.io/mspdaniel/brave-org:latest</Repository>
+  <Registry>https://ghcr.io</Registry>
+  <Network>bridge</Network>
+  <Shell>sh</Shell>
+  <Privileged>false</Privileged>
+  <Support>https://github.com/MSPDaniel/brave-org</Support>
+  <Project>https://github.com/MSPDaniel/brave-org</Project>
+  <Overview>Brave Origin on LinuxServer Selkies, with multilingual keyboard and persistent browser profile. Remote access tab title XOM.</Overview>
+  <Category>Network:Web</Category>
+  <WebUI>https://[IP]:[PORT:3001]/</WebUI>
+  <Icon>https://icons.iconarchive.com/icons/simpleicons-team/simple/256/brave-icon.png</Icon>
+  <ExtraParams>--security-opt seccomp=unconfined --shm-size=1g</ExtraParams>
+  <Config Name="WebUI HTTPS" Target="3001" Default="3012" Mode="tcp" Description="Selkies HTTPS web interface" Type="Port" Display="always" Required="true" Mask="false">3012</Config>
+  <Config Name="Appdata" Target="/config" Default="/mnt/user/appdata/brave-org" Mode="rw" Description="Persistent Brave Origin profile, logins, settings, downloads" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/brave-org</Config>
+  <Config Name="Basic auth username" Target="CUSTOM_USER" Default="brave" Mode="" Description="Username for LinuxServer Selkies web HTTP Basic authentication" Type="Variable" Display="always" Required="true" Mask="false">brave</Config>
+  <Config Name="Basic auth password" Target="PASSWORD" Default="" Mode="" Description="Required strong unique HTTP Basic auth password. Use HTTPS." Type="Variable" Display="always" Required="true" Mask="true"></Config>
+  <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="Unraid user UID" Type="Variable" Display="advanced" Required="true" Mask="false">99</Config>
+  <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="Unraid group GID" Type="Variable" Display="advanced" Required="true" Mask="false">100</Config>
+  <Config Name="Timezone" Target="TZ" Default="America/Chicago" Mode="" Description="Timezone" Type="Variable" Display="advanced" Required="false" Mask="false">America/Chicago</Config>
+  <Config Name="Tab title" Target="TITLE" Default="XOM" Mode="" Description="Web browser tab title" Type="Variable" Display="advanced" Required="false" Mask="false">XOM</Config>
+  <Config Name="Selkies UI title" Target="SELKIES_UI_TITLE" Default="XOM" Mode="" Description="Selkies tab and sidebar title" Type="Variable" Display="advanced" Required="false" Mask="false">XOM</Config>
+  <Config Name="Wayland" Target="PIXELFLUX_WAYLAND" Default="false" Mode="" Description="X11 desktop as in Meru" Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
+</Container>

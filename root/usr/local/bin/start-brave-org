@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# /config persists across image recreations, including login databases and extensions.
+mkdir -p /config/brave-org-profile /config/downloads /tmp/brave-org-cache
+
+if command -v brave-origin >/dev/null 2>&1; then
+  BROWSER=$(command -v brave-origin)
+elif [ -x /opt/brave.com/brave-origin/brave ]; then
+  BROWSER=/opt/brave.com/brave-origin/brave
+else
+  echo 'ERROR: Brave Origin executable not found' >&2
+  exit 1
+fi
+
+exec "$BROWSER" \
+  --user-data-dir=/config/brave-org-profile \
+  --disk-cache-dir=/tmp/brave-org-cache \
+  --no-first-run \
+  --no-default-browser-check \
+  --start-maximized \
+  "$@"

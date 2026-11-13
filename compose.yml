@@ -1,0 +1,23 @@
+services:
+  brave-org:
+    image: ghcr.io/mspdaniel/brave-org:latest
+    container_name: brave-org
+    restart: unless-stopped
+    security_opt:
+      - seccomp=unconfined
+    shm_size: "1gb"
+    ports:
+      - "3012:3001" # Selkies HTTPS UI
+    environment:
+      PUID: "99"
+      PGID: "100"
+      TZ: America/Chicago
+      TITLE: XOM
+      CUSTOM_USER: "${BRAVE_ORG_USER:-brave}"
+      PASSWORD: "${BRAVE_ORG_PASSWORD:?Set BRAVE_ORG_PASSWORD in your .env file}"
+      SELKIES_UI_TITLE: XOM
+      PIXELFLUX_WAYLAND: "false" # Same X11 Selkies path as working Meru
+      LANG: C.UTF-8
+      LC_ALL: C.UTF-8
+    volumes:
+      - /mnt/user/appdata/brave-org:/config
