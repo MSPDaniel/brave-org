@@ -130,3 +130,7 @@ python3 scripts/validate-project.py
 ```
 
 The publish job runs this check before building the image.
+
+## Compact icon-only taskbar
+
+The Openbox/X11 desktop includes tint2 configured as a **26-pixel-high bottom taskbar** with **icons only** (`task_text = 0`). Click the Brave icon to restore a minimized window. Settings are baked into `root/usr/local/share/brave-org/tint2rc`; rebuild/update the Docker image to apply. Browser profile and application configuration under `/config` are unchanged.
