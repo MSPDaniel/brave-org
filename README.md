@@ -14,14 +14,14 @@ Self-hosted **Brave Origin** browser on LinuxServer's Selkies desktop stack, bas
 - Tab favicon / PWA app icon: **black Brave lion on white** (Simple Icons Brave glyph; converted to PNG at build time)
 - Unraid template icon: monochrome Brave icon from IconArchive's Simple Icons collection
 - Default desktop: X11 mode, matching the Meru configuration (`PIXELFLUX_WAYLAND=false`)
-- **tint2 taskbar** at bottom of Selkies/Openbox desktop: click the Brave task button to restore a minimized browser window
+- **tint2 taskbar** at bottom of Selkies/Openbox desktop: left-click the Brave task button to restore a minimized browser window, or right-click it to close that window
 - Built-in web authentication via `CUSTOM_USER` and `PASSWORD` at the LinuxServer Nginx gateway
 
 **Tab name distinction:** `TITLE` sets the title of the local Edge tab *hosting the Selkies remote session*. The Brave windows and tabs *inside* the streamed desktop retain their normal titles.
 
 ## Restore a minimized Brave window with the taskbar
 
-This image installs Debian Trixie **tint2** and starts it **once** from the existing `/usr/local/bin/start-brave-org` launcher in the same Openbox/X11 session. A 34-pixel bottom panel displays open-window buttons. **Click the Brave button** to restore a minimized window; no Docker restart or keyboard shortcuts are needed. The taskbar is *not* a second desktop or a separate Selkies service. It stays active as the Brave restart loop relaunches the browser.
+This image installs Debian Trixie **tint2** and starts it **once** from the existing `/usr/local/bin/start-brave-org` launcher in the same Openbox/X11 session. A 26-pixel bottom panel displays icon-only open-window buttons. **Click the Brave button** to restore a minimized window; no Docker restart or keyboard shortcuts are needed. The taskbar is *not* a second desktop or a separate Selkies service. It stays active as the Brave restart loop relaunches the browser.
 
 The panel is configured in `root/usr/local/share/brave-org/tint2rc` and installed at `/usr/local/share/brave-org/tint2rc`. To customize its size, colors or placement, edit that file in GitHub and rebuild. The panel is intentionally kept outside `/config` so an existing persistent browser profile does not prevent it from being updated.
 
@@ -133,4 +133,4 @@ The publish job runs this check before building the image.
 
 ## Compact icon-only taskbar
 
-The Openbox/X11 desktop includes tint2 configured as a **26-pixel-high bottom taskbar** with **icons only** (`task_text = 0`). Click the Brave icon to restore a minimized window. Settings are baked into `root/usr/local/share/brave-org/tint2rc`; rebuild/update the Docker image to apply. Browser profile and application configuration under `/config` are unchanged.
+The Openbox/X11 desktop includes tint2 configured as a **26-pixel-high bottom taskbar** with **icons only** (`task_text = 0`). Left-click a window icon to minimize or restore it; **right-click to close that individual window** (verified in Selkies), or middle-click to close if mouse forwarding supports it. Closing the final Brave window triggers the existing auto-restart loop. Settings are baked into `root/usr/local/share/brave-org/tint2rc`; rebuild/update the Docker image to apply. Browser profile and application configuration under `/config` are unchanged.
